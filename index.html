@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MeraEditor – Free Video Editor</title>
+<meta name="description" content="Free video editor. Trim, Enhance, Compress aur Export, bina watermark ke.">
+<meta name="theme-color" content="#0c0b0b">
+<style>
+:root{
+  --bg:#0c0b0b; --card1:#1d1816; --card2:#110e0d; --line:#3a2a22;
+  --org:#F97316; --org1:#fb8a3c; --org2:#e5620f; --grn:#22D3A6;
+  --txt:#f4efe9; --mut:#9a918a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{
+  background:radial-gradient(120% 50% at 15% 0%,#2b1a10 0%,var(--bg) 55%) fixed,var(--bg);
+  color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:15px;line-height:1.4;min-height:100vh;padding-bottom:76px;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--org1);outline-offset:2px}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.wrap{max-width:460px;margin:0 auto;padding:14px}
+header{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #2a2320}
+.logo{font-size:20px;font-weight:600;letter-spacing:-.3px}
+.logo b{color:var(--org);font-weight:600}
+.ver{display:block;font-size:11px;color:var(--org);letter-spacing:2px}
+.badge{font-size:12px;color:var(--grn);background:rgba(34,211,166,.12);border:1px solid rgba(34,211,166,.5);border-radius:12px;padding:3px 10px}
+
+.card{background:linear-gradient(180deg,var(--card1),var(--card2));border:1px solid var(--line);border-radius:14px;padding:10px}
+.preview{box-shadow:0 0 18px rgba(249,115,22,.18);margin-bottom:14px}
+.pname{font-size:12px;color:#c9c0b8;margin:0 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stage{position:relative;background:#050404;border-radius:10px;overflow:hidden;aspect-ratio:16/10;display:flex;align-items:center;justify-content:center}
+video{max-width:100%;max-height:100%;display:block}
+.empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--mut);padding:20px;font-size:14px}
+.playbtn{position:absolute;width:48px;height:48px;border-radius:50%;border:0;background:var(--org);color:#0c0b0b;display:flex;align-items:center;justify-content:center;box-shadow:0 0 18px rgba(249,115,22,.6)}
+.playbtn svg{fill:currentColor;stroke:none;width:22px;height:22px}
+.tc{position:absolute;left:8px;bottom:8px;font-size:12px;background:rgba(0,0,0,.65);border-radius:5px;padding:1px 7px;font-variant-numeric:tabular-nums}
+
+.tl{position:relative;height:34px;margin:12px 6px 4px;touch-action:none}
+.track{position:absolute;inset:0;border-radius:6px;background:repeating-linear-gradient(90deg,#3a3430 0 4px,#15110f 4px 7px)}
+.sel{position:absolute;top:0;bottom:0;border:2px solid var(--org);border-radius:6px;background:rgba(249,115,22,.16);pointer-events:none}
+.ph{position:absolute;top:-4px;bottom:-4px;width:2px;background:#fff;pointer-events:none}
+.h{position:absolute;top:-4px;bottom:-4px;width:22px;margin-left:-11px;touch-action:none;cursor:ew-resize;display:flex;justify-content:center}
+.h::before{content:"";width:6px;height:100%;background:var(--org);border-radius:3px;box-shadow:0 0 8px rgba(249,115,22,.7)}
+.tt{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);padding:0 6px;font-variant-numeric:tabular-nums}
+
+.sec{display:flex;justify-content:space-between;align-items:center;margin:4px 2px 8px}
+.sec h2{font-size:17px;margin:0;font-weight:600}
+.sec span{font-size:12px;color:var(--org);letter-spacing:.5px}
+.row{display:grid;gap:8px;margin-bottom:8px}
+.r3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.r2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tile{background:linear-gradient(160deg,#2a211d,#13100e);border:1px solid var(--line);border-bottom:2px solid var(--org);border-radius:12px;padding:14px 4px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px}
+.tile svg{color:var(--org);width:24px;height:24px}
+.tile:active{transform:scale(.97)}
+.sl{background:linear-gradient(160deg,#2a211d,#13100e);border:1px solid var(--line);border-radius:12px;padding:8px 8px 10px}
+.sl .v{text-align:right;font-size:12px;color:#c9c0b8;font-variant-numeric:tabular-nums}
+.sl label{display:block;text-align:center;font-size:12px;margin-top:6px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:24px;background:transparent;margin:0;touch-action:pan-y}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--org) var(--p,50%),#3a3430 var(--p,50%))}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:#3a3430}
+input[type=range]::-moz-range-progress{height:4px;border-radius:2px;background:var(--org)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--org);margin-top:-7px;box-shadow:0 0 8px rgba(249,115,22,.7);border:0}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--org);box-shadow:0 0 8px rgba(249,115,22,.7);border:0}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.box{background:linear-gradient(160deg,#2a211d,#13100e);border:1px solid var(--line);border-radius:12px;padding:10px;min-width:0}
+.box h3{margin:0 0 4px;font-size:14px;font-weight:600}
+.cmp{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.sw{width:38px;height:22px;border-radius:11px;background:#3a3430;border:0;position:relative;flex-shrink:0;padding:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw[aria-checked=true]{background:var(--org)}
+.sw[aria-checked=true]::after{transform:translateX(16px)}
+.on{font-size:12px;color:var(--org)}
+.sub{font-size:12px;color:var(--mut)}
+.res{display:flex;gap:6px;margin-top:8px}
+.res button{flex:1;border-radius:8px;padding:8px 2px;font-size:13px;background:#17120f;border:1px solid var(--line)}
+.res button[aria-pressed=true]{background:linear-gradient(180deg,var(--org1),var(--org2));border-color:transparent;font-weight:600;color:#fff}
+
+.dl{position:relative;overflow:hidden;width:100%;border:0;border-radius:14px;padding:15px;font-size:16px;font-weight:600;color:#fff;background:linear-gradient(180deg,var(--org1),var(--org2));box-shadow:0 0 18px rgba(249,115,22,.45);display:flex;align-items:center;justify-content:center;gap:8px}
+.dl .bar{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(0,0,0,.28)}
+.dl span,.dl svg{position:relative}
+.dl[disabled]{opacity:.9;cursor:progress}
+.note{font-size:12px;color:var(--mut);margin:8px 2px 0;text-align:center}
+
+nav{position:fixed;left:0;right:0;bottom:0;background:#0c0b0b;border-top:1px solid #2a2320;padding:6px 14px calc(6px + env(safe-area-inset-bottom));z-index:5}
+nav .in{max-width:460px;margin:0 auto;display:flex;border:1px solid #2a2320;border-radius:12px;overflow:hidden}
+nav button{flex:1;background:none;border:0;padding:9px 0;display:flex;align-items:center;justify-content:center;gap:6px;color:#8a817a;font-size:14px}
+nav button svg{width:18px;height:18px}
+nav button[aria-current=page]{color:var(--org);background:linear-gradient(180deg,#2a1a10,#15100d);box-shadow:inset 0 -2px 0 var(--org)}
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:#241c18;border:1px solid var(--line);color:var(--txt);padding:10px 16px;border-radius:12px;font-size:14px;max-width:90%;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9;text-align:center}
+.toast.show{opacity:1}
+input[type=file]{display:none}
+canvas{display:none}
+
+@media(min-width:900px){
+  .wrap{max-width:1000px;padding:22px}
+  main{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:start}
+  .preview{position:sticky;top:16px;margin-bottom:0}
+  .stage{aspect-ratio:16/10}
+  body{padding-bottom:84px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="sharp" color-interpolation-filters="sRGB"><feConvolveMatrix id="kern" order="3" preserveAlpha="true" kernelMatrix="0 0 0 0 1 0 0 0 0"/></filter>
+</svg>
+
+<div class="wrap">
+  <header>
+    <div class="logo">Mera<b>Editor</b><span class="ver">PRO • v1.0</span></div>
+    <span class="badge">No watermark</span>
+  </header>
+
+  <main>
+    <section class="card preview" aria-label="Video preview">
+      <p class="pname" id="pname">Abhi koi video nahi chuni</p>
+      <div class="stage">
+        <video id="vid" playsinline preload="metadata"></video>
+        <div class="empty" id="empty">Neeche Upload, Gallery ya Camera dabao</div>
+        <button class="playbtn" id="play" aria-label="Play" hidden><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4l13 8-13 8z"/></svg></button>
+        <span class="tc" id="tc" hidden>00:00 / 00:00</span>
+      </div>
+      <div class="tl" id="tl">
+        <div class="track" id="track"></div>
+        <div class="sel" id="sel"></div>
+        <div class="ph" id="ph"></div>
+        <div class="h" id="hs" role="slider" aria-label="Trim start"></div>
+        <div class="h" id="he" role="slider" aria-label="Trim end"></div>
+      </div>
+      <div class="tt"><span id="ts">00:00</span><span id="te">00:00</span></div>
+    </section>
+
+    <section id="tools" aria-label="Tools">
+      <div class="sec"><h2>Tools</h2><span>14 BUTTONS • V1.0</span></div>
+
+      <div class="row r3">
+        <button class="tile" id="bUpload"><svg class="i" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload</button>
+        <button class="tile" id="bGallery"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Gallery</button>
+        <button class="tile" id="bCamera"><svg class="i" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Camera</button>
+      </div>
+
+      <div class="row r2">
+        <button class="tile" id="bTs"><svg class="i" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></svg>Trim Start</button>
+        <button class="tile" id="bTe"><svg class="i" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></svg>Trim End</button>
+      </div>
+
+      <div class="row r3">
+        <div class="sl"><div class="v" id="vb">50%</div><input type="range" id="rb" min="0" max="100" value="50" aria-labelledby="lb"><label id="lb" for="rb">Brightness</label></div>
+        <div class="sl"><div class="v" id="vc">50%</div><input type="range" id="rc" min="0" max="100" value="50" aria-labelledby="lc"><label id="lc" for="rc">Contrast</label></div>
+        <div class="sl"><div class="v" id="vs">50%</div><input type="range" id="rs" min="0" max="100" value="50" aria-labelledby="ls"><label id="ls" for="rs">Sharpness</label></div>
+      </div>
+
+      <div class="two">
+        <div class="box">
+          <div class="cmp"><h3>Compress</h3><button class="sw" id="sw" role="switch" aria-checked="true" aria-label="Compress"></button></div>
+          <div class="on" id="cmpState">Compress ON</div>
+          <div class="sub">Size kam, quality almost same</div>
+        </div>
+        <div class="box">
+          <h3 style="text-align:center">Export</h3>
+          <div class="res"><button id="r720" aria-pressed="true">720p</button><button id="r1080" aria-pressed="false">1080p</button></div>
+        </div>
+      </div>
+
+      <button class="dl" id="dl"><i class="bar" id="bar"></i><svg class="i" viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg><span id="dlText">Download</span></button>
+      <p class="note" id="note">Export ke time screen on rakho aur ye tab khula rakho.</p>
+    </section>
+  </main>
+</div>
+
+<nav aria-label="Main">
+  <div class="in">
+    <button id="nHome" aria-current="page"><svg class="i" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>Home</button>
+    <button id="nEdit"><svg class="i" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>Edit</button>
+  </div>
+</nav>
+
+<input type="file" id="fUpload" accept="video/*">
+<input type="file" id="fGallery" accept="video/mp4,video/quicktime,video/webm,video/*">
+<input type="file" id="fCamera" accept="video/*" capture="environment">
+<canvas id="cv"></canvas>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+const $ = s => document.getElementById(s);
+const v = $("vid"), cv = $("cv");
+const S = { url:null, dur:0, start:0, end:0, res:720, compress:true, b:50, c:50, s:50, busy:false };
+const MIN = 0.3;
+const clamp = (x,a,b) => Math.min(b, Math.max(a, x));
+const fmt = t => { t = Math.max(0, t||0); const m = Math.floor(t/60), s = Math.floor(t%60); return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0"); };
+
+let toastTimer;
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2600); }
+function need(){ if(!S.url){ toast("Pehle video chuno (Upload, Gallery ya Camera)"); return false; } return true; }
+
+/* ---------- Filters ---------- */
+function bcValue(p){ return (0.5 + p/100).toFixed(2); }
+function kernelFor(){
+  const a = Math.max(0, (S.s-50)/50) * 0.8;
+  return [0,-a,0,-a,1+4*a,-a,0,-a,0].map(n=>n.toFixed(3)).join(" ");
+}
+function filterFull(){ return "brightness("+bcValue(S.b)+") contrast("+bcValue(S.c)+") url(#sharp)"; }
+function filterBasic(){ return "brightness("+bcValue(S.b)+") contrast("+bcValue(S.c)+")"; }
+function applyFilters(){
+  $("kern").setAttribute("kernelMatrix", kernelFor());
+  v.style.filter = filterFull();
+  $("vb").textContent = S.b+"%"; $("vc").textContent = S.c+"%"; $("vs").textContent = S.s+"%";
+  [["rb",S.b],["rc",S.c],["rs",S.s]].forEach(([id,val])=>$(id).style.setProperty("--p",val+"%"));
+}
+[["rb","b"],["rc","c"],["rs","s"]].forEach(([id,key])=>{
+  $(id).addEventListener("input", e=>{ S[key]=+e.target.value; applyFilters(); });
+});
+
+/* ---------- Loading a video ---------- */
+function load(file){
+  if(!file) return;
+  if(S.url) URL.revokeObjectURL(S.url);
+  S.url = URL.createObjectURL(file);
+  v.onloadedmetadata = ()=>{
+    S.dur = v.duration; S.start = 0; S.end = v.duration;
+    $("pname").textContent = "Editing project: " + file.name;
+    $("empty").hidden = true; $("play").hidden = false; $("tc").hidden = false;
+    v.currentTime = 0; renderTL(); updateTC();
+    toast("Video aa gayi ✅");
+  };
+  v.onerror = ()=>{ S.url=null; toast("Ye video nahi khul rahi. MP4 video try karo."); };
+  v.src = S.url;
+}
+["fUpload","fGallery","fCamera"].forEach(id=>$(id).addEventListener("change", e=>{ load(e.target.files[0]); e.target.value=""; }));
+$("bUpload").onclick  = ()=>$("fUpload").click();
+$("bGallery").onclick = ()=>$("fGallery").click();
+$("bCamera").onclick  = ()=>$("fCamera").click();
+
+/* ---------- Play / time ---------- */
+function setPlayIcon(playing){
+  $("playIcon").innerHTML = playing ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>' : '<path d="M7 4l13 8-13 8z"/>';
+  $("play").setAttribute("aria-label", playing ? "Pause" : "Play");
+}
+$("play").onclick = ()=>{
+  if(!need() || S.busy) return;
+  if(v.paused){ if(v.currentTime<S.start || v.currentTime>=S.end-0.05) v.currentTime=S.start; v.play(); } else v.pause();
+};
+v.addEventListener("play",()=>setPlayIcon(true));
+v.addEventListener("pause",()=>setPlayIcon(false));
+v.addEventListener("timeupdate",()=>{
+  if(!S.busy && !v.paused && v.currentTime>=S.end){ v.pause(); v.currentTime=S.start; }
+  updateTC();
+});
+function updateTC(){
+  $("tc").textContent = fmt(v.currentTime)+" / "+fmt(S.dur);
+  if(S.dur) $("ph").style.left = (v.currentTime/S.dur*100)+"%";
+}
+
+/* ---------- Trim timeline ---------- */
+function renderTL(){
+  if(!S.dur) return;
+  const a = S.start/S.dur*100, b = S.end/S.dur*100;
+  $("sel").style.left=a+"%"; $("sel").style.width=(b-a)+"%";
+  $("hs").style.left=a+"%"; $("he").style.left=b+"%";
+  $("ts").textContent = "Start "+fmt(S.start);
+  $("te").textContent = "End "+fmt(S.end)+"  ("+fmt(S.end-S.start)+")";
+  $("hs").setAttribute("aria-valuenow", Math.round(S.start));
+  $("he").setAttribute("aria-valuenow", Math.round(S.end));
+}
+function timeFromX(x){ const r=$("track").getBoundingClientRect(); return clamp((x-r.left)/r.width,0,1)*S.dur; }
+function dragHandle(el, which){
+  el.addEventListener("pointerdown", e=>{ if(!S.dur||S.busy) return; e.preventDefault(); e.stopPropagation(); el.setPointerCapture(e.pointerId); });
+  el.addEventListener("pointermove", e=>{
+    if(!el.hasPointerCapture(e.pointerId)) return;
+    const t = timeFromX(e.clientX);
+    if(which==="s"){ S.start = Math.min(t, S.end-MIN); v.currentTime = S.start; }
+    else { S.end = Math.max(t, S.start+MIN); v.currentTime = Math.max(S.start, S.end-0.1); }
+    renderTL();
+  });
+}
+dragHandle($("hs"),"s"); dragHandle($("he"),"e");
+$("tl").addEventListener("pointerdown", e=>{
+  if(!S.dur||S.busy||e.target.classList.contains("h")) return;
+  v.currentTime = clamp(timeFromX(e.clientX), S.start, S.end);
+});
+$("bTs").onclick = ()=>{ if(!need()) return; S.start = Math.min(v.currentTime, S.end-MIN); renderTL(); toast("Start set: "+fmt(S.start)); };
+$("bTe").onclick = ()=>{ if(!need()) return; const t = v.currentTime; if(t<=S.start+MIN){ toast("End, Start ke baad hona chahiye. Video aage chalao."); return; } S.end = t; renderTL(); toast("End set: "+fmt(S.end)); };
+
+/* ---------- Compress / Resolution ---------- */
+$("sw").onclick = ()=>{
+  S.compress = !S.compress;
+  $("sw").setAttribute("aria-checked", S.compress);
+  $("cmpState").textContent = S.compress ? "Compress ON" : "Compress OFF";
+};
+function setRes(r){
+  S.res = r;
+  $("r720").setAttribute("aria-pressed", r===720);
+  $("r1080").setAttribute("aria-pressed", r===1080);
+}
+$("r720").onclick = ()=>setRes(720);
+$("r1080").onclick = ()=>setRes(1080);
+
+/* ---------- Bottom nav ---------- */
+function nav(which){
+  $("nHome").setAttribute("aria-current", which==="home" ? "page" : "false");
+  $("nEdit").setAttribute("aria-current", which==="edit" ? "page" : "false");
+}
+$("nHome").onclick = ()=>{ nav("home"); window.scrollTo({top:0,behavior:"smooth"}); };
+$("nEdit").onclick = ()=>{ nav("edit"); if(!S.url) toast("Edit karne ke liye pehle video chuno"); $("tools").scrollIntoView({behavior:"smooth",block:"start"}); };
+
+/* ---------- Export ---------- */
+let actx=null, outGain=null, adest=null;
+function setupAudio(){
+  if(actx) { if(actx.state==="suspended") actx.resume(); return; }
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    actx = new AC();
+    const src = actx.createMediaElementSource(v);
+    outGain = actx.createGain();
+    adest = actx.createMediaStreamDestination();
+    src.connect(outGain); outGain.connect(actx.destination);
+    src.connect(adest);
+  }catch(err){ actx=null; adest=null; outGain=null; }
+}
+function pickMime(){
+  const list = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
+  return list.find(m=>MediaRecorder.isTypeSupported(m)) || "";
+}
+function seek(t){
+  return new Promise(res=>{
+    if(Math.abs(v.currentTime-t)<0.02){ res(); return; }
+    const h=()=>{ v.removeEventListener("seeked",h); res(); };
+    v.addEventListener("seeked",h); v.currentTime=t;
+  });
+}
+function setBusy(on, pct){
+  S.busy = on;
+  $("dl").disabled = on;
+  $("bar").style.width = on ? (pct||0)+"%" : "0";
+  $("dlText").textContent = on ? "Export ho raha hai "+Math.round(pct||0)+"%" : "Download";
+}
+
+$("dl").onclick = async ()=>{
+  if(!need() || S.busy) return;
+  if(!window.MediaRecorder || !cv.captureStream){ toast("Is browser me export nahi chalega. Chrome use karo."); return; }
+  let wake=null;
+  try{
+    setBusy(true,0);
+    v.pause();
+    try{ wake = await navigator.wakeLock.request("screen"); }catch(e){}
+    setupAudio();
+    if(outGain) outGain.gain.value = 0;
+
+    const vw=v.videoWidth, vh=v.videoHeight;
+    const sc = Math.min(1, S.res/Math.min(vw,vh));
+    const W = Math.max(2, Math.round(vw*sc/2)*2), H = Math.max(2, Math.round(vh*sc/2)*2);
+    cv.width=W; cv.height=H;
+    const ctx = cv.getContext("2d");
+    const canFilter = "filter" in ctx;
+
+    const stream = cv.captureStream(30);
+    if(adest) adest.stream.getAudioTracks().forEach(t=>stream.addTrack(t));
+    const mime = pickMime();
+    const bps = S.compress ? (S.res===1080 ? 3500000 : 1800000) : (S.res===1080 ? 10000000 : 5000000);
+    const rec = new MediaRecorder(stream, mime ? {mimeType:mime, videoBitsPerSecond:bps} : {videoBitsPerSecond:bps});
+    const chunks=[];
+    rec.ondataavailable = e=>{ if(e.data && e.data.size) chunks.push(e.data); };
+    const stopped = new Promise(r=>rec.onstop=r);
+
+    await seek(S.start);
+    rec.start(500);
+    await v.play();
+
+    await new Promise(resolve=>{
+      const total = S.end - S.start;
+      const draw = ()=>{
+        if(canFilter){
+          ctx.filter = filterFull();
+          if(ctx.filter==="none") ctx.filter = filterBasic();
+        }
+        ctx.drawImage(v,0,0,W,H);
+        const pct = clamp((v.currentTime-S.start)/total*100,0,100);
+        setBusy(true,pct);
+        if(v.currentTime>=S.end-0.03 || v.ended || v.paused){ resolve(); return; }
+        requestAnimationFrame(draw);
+      };
+      draw();
+    });
+
+    v.pause();
+    rec.stop();
+    await stopped;
+
+    const type = rec.mimeType || mime || "video/webm";
+    const blob = new Blob(chunks,{type});
+    const ext = type.indexOf("mp4")>-1 ? "mp4" : "webm";
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "MeraEditor_"+S.res+"p."+ext;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 30000);
+    toast(canFilter ? "Video save ho gayi ✅" : "Video save ho gayi. Is browser me Brightness, Contrast, Sharpness export me nahi lagte.");
+  }catch(err){
+    toast("Export nahi ho paya. Chhoti video ya Chrome try karo.");
+  }finally{
+    if(outGain) outGain.gain.value = 1;
+    try{ if(wake) wake.release(); }catch(e){}
+    v.currentTime = S.start;
+    setBusy(false);
+  }
+};
+
+applyFilters();
+})();
+</script>
+</body>
+</html>
