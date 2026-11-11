@@ -114,7 +114,7 @@ canvas{display:none}
 
 <div class="wrap">
   <header>
-    <div class="logo">Mera<b>Editor</b><span class="ver">PRO • v1.1</span></div>
+    <div class="logo">Mera<b>Editor</b><span class="ver">PRO • v1.2</span></div>
     <span class="badge">No watermark</span>
   </header>
 
@@ -138,7 +138,7 @@ canvas{display:none}
     </section>
 
     <section id="tools" aria-label="Tools">
-      <div class="sec"><h2>Tools</h2><span>17 BUTTONS • V1.1</span></div>
+      <div class="sec"><h2>Tools</h2><span>18 BUTTONS • V1.2</span></div>
 
       <div class="row r3">
         <button class="tile" id="bUpload"><svg class="i" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload</button>
@@ -146,9 +146,10 @@ canvas{display:none}
         <button class="tile" id="bCamera"><svg class="i" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Camera</button>
       </div>
 
-      <div class="row r2">
+      <div class="row r3">
         <button class="tile" id="bTs"><svg class="i" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></svg>Trim Start</button>
         <button class="tile" id="bTe"><svg class="i" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></svg>Trim End</button>
+        <button class="tile" id="bRot"><svg class="i" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>Rotate</button>
       </div>
 
       <div class="row r3">
@@ -198,7 +199,7 @@ canvas{display:none}
 "use strict";
 const $ = s => document.getElementById(s);
 const v = $("vid"), cv = $("cv");
-const S = { url:null, dur:0, start:0, end:0, res:720, speed:1, compress:true, b:50, c:50, s:50, busy:false };
+const S = { url:null, dur:0, start:0, end:0, res:720, speed:1, rot:0, compress:true, b:50, c:50, s:50, busy:false };
 const MIN = 0.3;
 const clamp = (x,a,b) => Math.min(b, Math.max(a, x));
 const fmt = t => { t = Math.max(0, t||0); const m = Math.floor(t/60), s = Math.floor(t%60); return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0"); };
@@ -234,7 +235,7 @@ function load(file){
     S.dur = v.duration; S.start = 0; S.end = v.duration;
     $("pname").textContent = "Editing project: " + file.name;
     $("empty").hidden = true; $("play").hidden = false; $("tc").hidden = false;
-    v.playbackRate = S.speed; v.currentTime = 0; renderTL(); updateTC();
+    S.rot = 0; fitRotate(); v.playbackRate = S.speed; v.currentTime = 0; renderTL(); updateTC();
     toast("Video aa gayi ✅");
   };
   v.onerror = ()=>{ S.url=null; toast("Ye video nahi khul rahi. MP4 video try karo."); };
@@ -294,6 +295,24 @@ $("tl").addEventListener("pointerdown", e=>{
 });
 $("bTs").onclick = ()=>{ if(!need()) return; S.start = Math.min(v.currentTime, S.end-MIN); renderTL(); toast("Start set: "+fmt(S.start)); };
 $("bTe").onclick = ()=>{ if(!need()) return; const t = v.currentTime; if(t<=S.start+MIN){ toast("End, Start ke baad hona chahiye. Video aage chalao."); return; } S.end = t; renderTL(); toast("End set: "+fmt(S.end)); };
+
+/* ---------- Rotate ---------- */
+function fitRotate(){
+  const st = v.parentElement;
+  const sw = st.clientWidth, sh = st.clientHeight;
+  const dw = v.clientWidth, dh = v.clientHeight;
+  let k = 1;
+  if(S.rot % 180 !== 0 && dw && dh) k = Math.min(sw/dh, sh/dw);
+  v.style.transform = S.rot ? "rotate("+S.rot+"deg) scale("+k.toFixed(3)+")" : "";
+}
+$("bRot").onclick = ()=>{
+  if(!need()) return;
+  if(S.busy){ toast("Export chal raha hai, thoda ruko"); return; }
+  S.rot = (S.rot + 90) % 360;
+  fitRotate();
+  toast("Rotate: "+S.rot+"°");
+};
+window.addEventListener("resize", fitRotate);
 
 /* ---------- Speed ---------- */
 function setSpeed(r){
@@ -373,8 +392,10 @@ $("dl").onclick = async ()=>{
     if(outGain) outGain.gain.value = 0;
 
     const vw=v.videoWidth, vh=v.videoHeight;
-    const sc = Math.min(1, S.res/Math.min(vw,vh));
-    const W = Math.max(2, Math.round(vw*sc/2)*2), H = Math.max(2, Math.round(vh*sc/2)*2);
+    const swap = S.rot===90 || S.rot===270;
+    const ow = swap ? vh : vw, oh = swap ? vw : vh;
+    const sc = Math.min(1, S.res/Math.min(ow,oh));
+    const W = Math.max(2, Math.round(ow*sc/2)*2), H = Math.max(2, Math.round(oh*sc/2)*2);
     cv.width=W; cv.height=H;
     const ctx = cv.getContext("2d");
     const canFilter = "filter" in ctx;
@@ -400,7 +421,11 @@ $("dl").onclick = async ()=>{
           ctx.filter = filterFull();
           if(ctx.filter==="none") ctx.filter = filterBasic();
         }
-        ctx.drawImage(v,0,0,W,H);
+        ctx.save();
+        ctx.translate(W/2, H/2);
+        ctx.rotate(S.rot*Math.PI/180);
+        ctx.drawImage(v, -(swap?H:W)/2, -(swap?W:H)/2, swap?H:W, swap?W:H);
+        ctx.restore();
         const pct = clamp((v.currentTime-S.start)/total*100,0,100);
         setBusy(true,pct);
         if(v.currentTime>=S.end-0.03 || v.ended || v.paused){ resolve(); return; }
