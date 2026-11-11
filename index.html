@@ -114,7 +114,7 @@ canvas{display:none}
 
 <div class="wrap">
   <header>
-    <div class="logo">Mera<b>Editor</b><span class="ver">PRO • v1.0</span></div>
+    <div class="logo">Mera<b>Editor</b><span class="ver">PRO • v1.1</span></div>
     <span class="badge">No watermark</span>
   </header>
 
@@ -138,7 +138,7 @@ canvas{display:none}
     </section>
 
     <section id="tools" aria-label="Tools">
-      <div class="sec"><h2>Tools</h2><span>14 BUTTONS • V1.0</span></div>
+      <div class="sec"><h2>Tools</h2><span>17 BUTTONS • V1.1</span></div>
 
       <div class="row r3">
         <button class="tile" id="bUpload"><svg class="i" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload</button>
@@ -157,6 +157,11 @@ canvas{display:none}
         <div class="sl"><div class="v" id="vs">50%</div><input type="range" id="rs" min="0" max="100" value="50" aria-labelledby="ls"><label id="ls" for="rs">Sharpness</label></div>
       </div>
 
+      <div class="box" style="margin-bottom:8px">
+        <h3>Speed</h3>
+        <div class="res" id="spd"><button data-s="0.5" aria-pressed="false">0.5x Slow</button><button data-s="1" aria-pressed="true">1x</button><button data-s="2" aria-pressed="false">2x Fast</button></div>
+      </div>
+
       <div class="two">
         <div class="box">
           <div class="cmp"><h3>Compress</h3><button class="sw" id="sw" role="switch" aria-checked="true" aria-label="Compress"></button></div>
@@ -170,7 +175,7 @@ canvas{display:none}
       </div>
 
       <button class="dl" id="dl"><i class="bar" id="bar"></i><svg class="i" viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg><span id="dlText">Download</span></button>
-      <p class="note" id="note">Export ke time screen on rakho aur ye tab khula rakho.</p>
+      <p class="note" id="note">Export ke time screen on rakho aur ye tab khula rakho. Export me utna hi time lagta hai jitni output video ki length hai.</p>
     </section>
   </main>
 </div>
@@ -193,7 +198,7 @@ canvas{display:none}
 "use strict";
 const $ = s => document.getElementById(s);
 const v = $("vid"), cv = $("cv");
-const S = { url:null, dur:0, start:0, end:0, res:720, compress:true, b:50, c:50, s:50, busy:false };
+const S = { url:null, dur:0, start:0, end:0, res:720, speed:1, compress:true, b:50, c:50, s:50, busy:false };
 const MIN = 0.3;
 const clamp = (x,a,b) => Math.min(b, Math.max(a, x));
 const fmt = t => { t = Math.max(0, t||0); const m = Math.floor(t/60), s = Math.floor(t%60); return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0"); };
@@ -229,7 +234,7 @@ function load(file){
     S.dur = v.duration; S.start = 0; S.end = v.duration;
     $("pname").textContent = "Editing project: " + file.name;
     $("empty").hidden = true; $("play").hidden = false; $("tc").hidden = false;
-    v.currentTime = 0; renderTL(); updateTC();
+    v.playbackRate = S.speed; v.currentTime = 0; renderTL(); updateTC();
     toast("Video aa gayi ✅");
   };
   v.onerror = ()=>{ S.url=null; toast("Ye video nahi khul rahi. MP4 video try karo."); };
@@ -267,7 +272,7 @@ function renderTL(){
   $("sel").style.left=a+"%"; $("sel").style.width=(b-a)+"%";
   $("hs").style.left=a+"%"; $("he").style.left=b+"%";
   $("ts").textContent = "Start "+fmt(S.start);
-  $("te").textContent = "End "+fmt(S.end)+"  ("+fmt(S.end-S.start)+")";
+  $("te").textContent = "End "+fmt(S.end)+"  (output "+fmt((S.end-S.start)/S.speed)+")";
   $("hs").setAttribute("aria-valuenow", Math.round(S.start));
   $("he").setAttribute("aria-valuenow", Math.round(S.end));
 }
@@ -289,6 +294,18 @@ $("tl").addEventListener("pointerdown", e=>{
 });
 $("bTs").onclick = ()=>{ if(!need()) return; S.start = Math.min(v.currentTime, S.end-MIN); renderTL(); toast("Start set: "+fmt(S.start)); };
 $("bTe").onclick = ()=>{ if(!need()) return; const t = v.currentTime; if(t<=S.start+MIN){ toast("End, Start ke baad hona chahiye. Video aage chalao."); return; } S.end = t; renderTL(); toast("End set: "+fmt(S.end)); };
+
+/* ---------- Speed ---------- */
+function setSpeed(r){
+  S.speed = r;
+  v.defaultPlaybackRate = r;
+  v.playbackRate = r;
+  document.querySelectorAll("#spd button").forEach(b=>b.setAttribute("aria-pressed", +b.dataset.s===r));
+  renderTL();
+}
+document.querySelectorAll("#spd button").forEach(b=>{
+  b.onclick = ()=>{ if(S.busy){ toast("Export chal raha hai, thoda ruko"); return; } setSpeed(+b.dataset.s); toast("Speed: "+b.dataset.s+"x"); };
+});
 
 /* ---------- Compress / Resolution ---------- */
 $("sw").onclick = ()=>{
@@ -372,6 +389,7 @@ $("dl").onclick = async ()=>{
     const stopped = new Promise(r=>rec.onstop=r);
 
     await seek(S.start);
+    v.playbackRate = S.speed;
     rec.start(500);
     await v.play();
 
