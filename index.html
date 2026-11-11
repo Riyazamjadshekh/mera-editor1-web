@@ -66,6 +66,14 @@ input[type=range]::-moz-range-progress{height:4px;border-radius:2px;background:v
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--org);margin-top:-7px;box-shadow:0 0 8px rgba(249,115,22,.7);border:0}
 input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--org);box-shadow:0 0 8px rgba(249,115,22,.7);border:0}
 
+#tcv{display:block;position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.stage.tx{touch-action:none}
+textarea{display:block;width:100%;background:#0d0b0a;border:1px solid var(--line);border-radius:8px;color:var(--txt);font:inherit;font-size:16px;padding:8px 10px;resize:none;margin:6px 0 4px}
+textarea::placeholder{color:#6f6760}
+.lbl{font-size:12px;color:var(--mut);margin-top:10px}
+.swatches{display:flex;gap:10px;margin-top:6px}
+.swatches button{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);padding:0}
+.swatches button[aria-pressed=true]{border-color:#fff;box-shadow:0 0 0 2px var(--org)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
 .box{background:linear-gradient(160deg,#2a211d,#13100e);border:1px solid var(--line);border-radius:12px;padding:10px;min-width:0}
 .box h3{margin:0 0 4px;font-size:14px;font-weight:600}
@@ -114,7 +122,7 @@ canvas{display:none}
 
 <div class="wrap">
   <header>
-    <div class="logo">Mera<b>Editor</b><span class="ver">PRO • v1.2</span></div>
+    <div class="logo">Mera<b>Editor</b><span class="ver">PRO • v1.3</span></div>
     <span class="badge">No watermark</span>
   </header>
 
@@ -124,6 +132,7 @@ canvas{display:none}
       <div class="stage">
         <video id="vid" playsinline preload="metadata"></video>
         <div class="empty" id="empty">Neeche Upload, Gallery ya Camera dabao</div>
+        <canvas id="tcv"></canvas>
         <button class="playbtn" id="play" aria-label="Play" hidden><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4l13 8-13 8z"/></svg></button>
         <span class="tc" id="tc" hidden>00:00 / 00:00</span>
       </div>
@@ -138,7 +147,7 @@ canvas{display:none}
     </section>
 
     <section id="tools" aria-label="Tools">
-      <div class="sec"><h2>Tools</h2><span>18 BUTTONS • V1.2</span></div>
+      <div class="sec"><h2>Tools</h2><span>PRO TOOLS • V1.3</span></div>
 
       <div class="row r3">
         <button class="tile" id="bUpload"><svg class="i" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload</button>
@@ -156,6 +165,27 @@ canvas{display:none}
         <div class="sl"><div class="v" id="vb">50%</div><input type="range" id="rb" min="0" max="100" value="50" aria-labelledby="lb"><label id="lb" for="rb">Brightness</label></div>
         <div class="sl"><div class="v" id="vc">50%</div><input type="range" id="rc" min="0" max="100" value="50" aria-labelledby="lc"><label id="lc" for="rc">Contrast</label></div>
         <div class="sl"><div class="v" id="vs">50%</div><input type="range" id="rs" min="0" max="100" value="50" aria-labelledby="ls"><label id="ls" for="rs">Sharpness</label></div>
+      </div>
+
+      <div class="box" id="txtBox" style="margin-bottom:8px">
+        <h3>Text</h3>
+        <textarea id="tIn" rows="2" maxlength="120" placeholder="Yahan text likho (Hindi bhi chalega)"></textarea>
+        <div class="lbl">Size</div>
+        <input type="range" id="tSize" min="3" max="15" value="7" aria-label="Text size">
+        <div class="lbl">Rang</div>
+        <div class="swatches" id="tCol">
+          <button data-c="#ffffff" aria-pressed="true" aria-label="Safed" style="background:#ffffff"></button>
+          <button data-c="#F97316" aria-pressed="false" aria-label="Orange" style="background:#F97316"></button>
+          <button data-c="#FACC15" aria-pressed="false" aria-label="Peela" style="background:#FACC15"></button>
+          <button data-c="#22D3A6" aria-pressed="false" aria-label="Hara" style="background:#22D3A6"></button>
+          <button data-c="#F472B6" aria-pressed="false" aria-label="Gulabi" style="background:#F472B6"></button>
+          <button data-c="#EF4444" aria-pressed="false" aria-label="Laal" style="background:#EF4444"></button>
+        </div>
+        <div class="lbl">Style</div>
+        <div class="res" style="margin-top:6px" id="tSty"><button data-k="tbold" aria-pressed="true">Bold</button><button data-k="tout" aria-pressed="true">Outline</button><button data-k="tbox" aria-pressed="false">Box</button></div>
+        <div class="lbl">Jagah</div>
+        <div class="res" style="margin-top:6px" id="tPos"><button data-y="0.15">Upar</button><button data-y="0.5">Beech</button><button data-y="0.85">Neeche</button></div>
+        <div class="sub" style="margin-top:8px">Text ko preview me ungli se kheench ke bhi hila sakte ho.</div>
       </div>
 
       <div class="box" style="margin-bottom:8px">
@@ -199,7 +229,7 @@ canvas{display:none}
 "use strict";
 const $ = s => document.getElementById(s);
 const v = $("vid"), cv = $("cv");
-const S = { url:null, dur:0, start:0, end:0, res:720, speed:1, rot:0, compress:true, b:50, c:50, s:50, busy:false };
+const S = { url:null, dur:0, start:0, end:0, res:720, speed:1, rot:0, text:"", tsize:7, tcol:"#ffffff", tbold:true, tout:true, tbox:false, tx:0.5, ty:0.85, hit:null, compress:true, b:50, c:50, s:50, busy:false };
 const MIN = 0.3;
 const clamp = (x,a,b) => Math.min(b, Math.max(a, x));
 const fmt = t => { t = Math.max(0, t||0); const m = Math.floor(t/60), s = Math.floor(t%60); return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0"); };
@@ -304,6 +334,7 @@ function fitRotate(){
   let k = 1;
   if(S.rot % 180 !== 0 && dw && dh) k = Math.min(sw/dh, sh/dw);
   v.style.transform = S.rot ? "rotate("+S.rot+"deg) scale("+k.toFixed(3)+")" : "";
+  redrawText();
 }
 $("bRot").onclick = ()=>{
   if(!need()) return;
@@ -313,6 +344,103 @@ $("bRot").onclick = ()=>{
   toast("Rotate: "+S.rot+"°");
 };
 window.addEventListener("resize", fitRotate);
+
+/* ---------- Text ---------- */
+const FONT = '"Noto Sans Devanagari","Mukta","Segoe UI",system-ui,sans-serif';
+function visRect(){
+  const st = v.parentElement;
+  const sw = st.clientWidth, sh = st.clientHeight;
+  const dw = v.clientWidth, dh = v.clientHeight;
+  let w = dw, h = dh;
+  if(S.rot % 180 !== 0 && dw && dh){ const k = Math.min(sw/dh, sh/dw); w = dh*k; h = dw*k; }
+  return { x:(sw-w)/2, y:(sh-h)/2, w:w, h:h };
+}
+/* Same function draws the preview and the exported video, so both look identical. */
+function drawText(ctx, W, H){
+  const t = S.text.trim();
+  if(!t) return null;
+  const px = Math.max(8, Math.round(S.tsize/100*H));
+  const lines = t.split("\n");
+  ctx.save();
+  ctx.filter = "none";
+  ctx.font = (S.tbold ? "700 " : "500 ") + px + "px " + FONT;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  const lh = px*1.25;
+  const bw = Math.max.apply(null, lines.map(l=>ctx.measureText(l).width));
+  const bh = lh*lines.length;
+  const cx = bw < W ? clamp(S.tx*W, bw/2, W-bw/2) : W/2;
+  const cy = bh < H ? clamp(S.ty*H, bh/2, H-bh/2) : H/2;
+  if(S.tbox){
+    const pad = px*0.35;
+    ctx.fillStyle = "rgba(0,0,0,0.62)";
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(cx-bw/2-pad, cy-bh/2-pad, bw+pad*2, bh+pad*2, pad); else ctx.rect(cx-bw/2-pad, cy-bh/2-pad, bw+pad*2, bh+pad*2);
+    ctx.fill();
+  }
+  lines.forEach((l,i)=>{
+    const y = cy - bh/2 + lh*(i+0.5);
+    if(S.tout){
+      ctx.lineJoin = "round"; ctx.lineWidth = px*0.16; ctx.strokeStyle = "#000";
+      ctx.strokeText(l, cx, y);
+    } else {
+      ctx.shadowColor = "rgba(0,0,0,0.65)"; ctx.shadowBlur = px*0.18; ctx.shadowOffsetY = px*0.04;
+    }
+    ctx.fillStyle = S.tcol;
+    ctx.fillText(l, cx, y);
+  });
+  ctx.restore();
+  return { x:cx-bw/2, y:cy-bh/2, w:bw, h:bh };
+}
+function redrawText(){
+  const oc = $("tcv"), st = v.parentElement;
+  const sw = st.clientWidth, sh = st.clientHeight;
+  const dpr = window.devicePixelRatio || 1;
+  if(oc.width !== Math.round(sw*dpr) || oc.height !== Math.round(sh*dpr)){ oc.width = Math.round(sw*dpr); oc.height = Math.round(sh*dpr); }
+  const c = oc.getContext("2d");
+  c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,oc.width,oc.height);
+  S.hit = null;
+  if(!S.url || !S.text.trim()){ st.classList.remove("tx"); return; }
+  const r = visRect();
+  if(!r.w || !r.h){ return; }
+  c.setTransform(dpr,0,0,dpr,r.x*dpr,r.y*dpr);
+  const b = drawText(c, r.w, r.h);
+  if(b) S.hit = { x:b.x+r.x, y:b.y+r.y, w:b.w, h:b.h };
+  st.classList.toggle("tx", !!b);
+}
+$("tIn").addEventListener("input", e=>{ S.text = e.target.value; redrawText(); });
+$("tSize").addEventListener("input", e=>{ S.tsize = +e.target.value; e.target.style.setProperty("--p", ((S.tsize-3)/12*100)+"%"); redrawText(); });
+$("tSize").style.setProperty("--p", ((S.tsize-3)/12*100)+"%");
+document.querySelectorAll("#tCol button").forEach(b=>{
+  b.onclick = ()=>{ S.tcol = b.dataset.c; document.querySelectorAll("#tCol button").forEach(x=>x.setAttribute("aria-pressed", x===b)); redrawText(); };
+});
+document.querySelectorAll("#tSty button").forEach(b=>{
+  b.onclick = ()=>{ const k = b.dataset.k; S[k] = !S[k]; b.setAttribute("aria-pressed", S[k]); redrawText(); };
+});
+document.querySelectorAll("#tPos button").forEach(b=>{
+  b.onclick = ()=>{ S.tx = 0.5; S.ty = +b.dataset.y; redrawText(); if(!S.text.trim()) toast("Pehle text likho"); };
+});
+(function(){
+  const st = v.parentElement;
+  let drag = null;
+  st.addEventListener("pointerdown", e=>{
+    if(!S.hit || S.busy || e.target.closest("#play")) return;
+    const r = st.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top, h = S.hit, pad = 16;
+    if(x>=h.x-pad && x<=h.x+h.w+pad && y>=h.y-pad && y<=h.y+h.h+pad){
+      drag = { dx: x-(h.x+h.w/2), dy: y-(h.y+h.h/2) };
+      st.setPointerCapture(e.pointerId); e.preventDefault();
+    }
+  });
+  st.addEventListener("pointermove", e=>{
+    if(!drag) return;
+    const r = st.getBoundingClientRect(), vr = visRect();
+    S.tx = clamp((e.clientX - r.left - drag.dx - vr.x)/vr.w, 0, 1);
+    S.ty = clamp((e.clientY - r.top - drag.dy - vr.y)/vr.h, 0, 1);
+    redrawText();
+  });
+  const end = ()=>{ drag = null; };
+  st.addEventListener("pointerup", end); st.addEventListener("pointercancel", end);
+})();
 
 /* ---------- Speed ---------- */
 function setSpeed(r){
@@ -376,6 +504,7 @@ function seek(t){
 function setBusy(on, pct){
   S.busy = on;
   $("dl").disabled = on;
+  document.querySelectorAll("#txtBox button, #txtBox input, #txtBox textarea").forEach(el=>{ el.disabled = on; });
   $("bar").style.width = on ? (pct||0)+"%" : "0";
   $("dlText").textContent = on ? "Export ho raha hai "+Math.round(pct||0)+"%" : "Download";
 }
@@ -426,6 +555,7 @@ $("dl").onclick = async ()=>{
         ctx.rotate(S.rot*Math.PI/180);
         ctx.drawImage(v, -(swap?H:W)/2, -(swap?W:H)/2, swap?H:W, swap?W:H);
         ctx.restore();
+        drawText(ctx, W, H);
         const pct = clamp((v.currentTime-S.start)/total*100,0,100);
         setBusy(true,pct);
         if(v.currentTime>=S.end-0.03 || v.ended || v.paused){ resolve(); return; }
