@@ -88,6 +88,15 @@ textarea::placeholder{color:#6f6760}
 .res button{flex:1;border-radius:8px;padding:8px 2px;font-size:13px;background:#17120f;border:1px solid var(--line)}
 .res button[aria-pressed=true]{background:linear-gradient(180deg,var(--org1),var(--org2));border-color:transparent;font-weight:600;color:#fff}
 
+button:disabled,input:disabled,textarea:disabled{opacity:.5;cursor:not-allowed}
+.plist{max-height:none}
+.prow{background:#17120f;border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:8px}
+.ptop{display:flex;gap:8px;align-items:center;font-size:13px;font-variant-numeric:tabular-nums}
+.ptop input{width:20px;height:20px;accent-color:var(--org);flex-shrink:0}
+.pbtn{display:flex;gap:6px;margin-top:6px}
+.pbtn button{flex:1;padding:7px 2px;font-size:12px;border-radius:8px;background:#0d0b0a;border:1px solid var(--line)}
+.dl.sm{font-size:14px;padding:12px;margin-top:8px}
+.warn{font-size:12px;color:#FACC15;margin-top:6px}
 .dl{position:relative;overflow:hidden;width:100%;border:0;border-radius:14px;padding:15px;font-size:16px;font-weight:600;color:#fff;background:linear-gradient(180deg,var(--org1),var(--org2));box-shadow:0 0 18px rgba(249,115,22,.45);display:flex;align-items:center;justify-content:center;gap:8px}
 .dl .bar{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(0,0,0,.28)}
 .dl span,.dl svg{position:relative}
@@ -122,7 +131,7 @@ canvas{display:none}
 
 <div class="wrap">
   <header>
-    <div class="logo">Mera<b>Editor</b><span class="ver">PRO • v1.3</span></div>
+    <div class="logo">Mera<b>Editor</b><span class="ver">PRO • v1.4</span></div>
     <span class="badge">No watermark</span>
   </header>
 
@@ -147,7 +156,7 @@ canvas{display:none}
     </section>
 
     <section id="tools" aria-label="Tools">
-      <div class="sec"><h2>Tools</h2><span>PRO TOOLS • V1.3</span></div>
+      <div class="sec"><h2>Tools</h2><span>PRO TOOLS • V1.4</span></div>
 
       <div class="row r3">
         <button class="tile" id="bUpload"><svg class="i" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload</button>
@@ -207,6 +216,26 @@ canvas{display:none}
 
       <button class="dl" id="dl"><i class="bar" id="bar"></i><svg class="i" viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg><span id="dlText">Download</span></button>
       <p class="note" id="note">Export ke time screen on rakho aur ye tab khula rakho. Export me utna hi time lagta hai jitni output video ki length hai.</p>
+
+      <div class="box" id="partsBox" style="margin-top:14px">
+        <h3>Parts (lambi video ko kaato)</h3>
+        <div class="sub">Upar ki Trim range ko barabar parts me baanto, ya video rok kar "Yahan se kaato" dabao.</div>
+        <div class="lbl">Kitne parts?</div>
+        <div class="res" id="pN" style="margin-top:6px"><button data-n="5" aria-pressed="false">5</button><button data-n="10" aria-pressed="true">10</button><button data-n="20" aria-pressed="false">20</button></div>
+        <div class="res"><button id="pSplit">Barabar parts me kaato</button></div>
+        <div class="res"><button id="pCut">Yahan se kaato</button><button id="pClear">Sab hatao</button></div>
+        <div class="plist" id="pList"></div>
+        <div class="res"><button id="pAll">Sab chuno</button><button id="pNone">Koi nahi</button></div>
+        <button class="dl sm" id="pJoin" disabled><span id="pJoinT">Parts jodo + Download</span></button>
+        <div class="sub" id="pStat" style="margin-top:6px"></div>
+        <div class="res"><button id="pSave">Project save karo</button></div>
+        <div class="sub" style="margin-top:6px">Parts aur video isi browser ke andar save hote hain, baad me wapas khol ke jod sakte ho. Edit settings (Text, Speed, Rotate...) sab parts pe lagti hain.</div>
+      </div>
+
+      <div class="box" id="savedBox" style="margin-top:8px">
+        <h3>Saved projects</h3>
+        <div id="sList"><div class="sub">Abhi koi saved project nahi.</div></div>
+      </div>
     </section>
   </main>
 </div>
@@ -229,10 +258,10 @@ canvas{display:none}
 "use strict";
 const $ = s => document.getElementById(s);
 const v = $("vid"), cv = $("cv");
-const S = { url:null, dur:0, start:0, end:0, res:720, speed:1, rot:0, text:"", tsize:7, tcol:"#ffffff", tbold:true, tout:true, tbox:false, tx:0.5, ty:0.85, hit:null, compress:true, b:50, c:50, s:50, busy:false };
+const S = { url:null, dur:0, start:0, end:0, res:720, speed:1, rot:0, text:"", tsize:7, tcol:"#ffffff", tbold:true, tout:true, tbox:false, tx:0.5, ty:0.85, hit:null, pe:null, file:null, name:"", pid:null, parts:[], pn:10, compress:true, b:50, c:50, s:50, busy:false };
 const MIN = 0.3;
 const clamp = (x,a,b) => Math.min(b, Math.max(a, x));
-const fmt = t => { t = Math.max(0, t||0); const m = Math.floor(t/60), s = Math.floor(t%60); return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0"); };
+const fmt = t => { t = Math.max(0, t||0); const h = Math.floor(t/3600), m = Math.floor(t%3600/60), s = Math.floor(t%60); const p = n => String(n).padStart(2,"0"); return h ? h+":"+p(m)+":"+p(s) : p(m)+":"+p(s); };
 
 let toastTimer;
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2600); }
@@ -257,15 +286,17 @@ function applyFilters(){
 });
 
 /* ---------- Loading a video ---------- */
-function load(file){
-  if(!file) return;
+function load(file){ if(file) loadBlob(file, file.name, null, []); }
+function loadBlob(blob, name, pid, parts){
   if(S.url) URL.revokeObjectURL(S.url);
-  S.url = URL.createObjectURL(file);
+  S.url = URL.createObjectURL(blob);
+  S.file = blob; S.name = name; S.pid = pid; S.parts = parts || []; S.pe = null;
   v.onloadedmetadata = ()=>{
     S.dur = v.duration; S.start = 0; S.end = v.duration;
-    $("pname").textContent = "Editing project: " + file.name;
+    $("pname").textContent = "Editing project: " + name;
     $("empty").hidden = true; $("play").hidden = false; $("tc").hidden = false;
     S.rot = 0; fitRotate(); v.playbackRate = S.speed; v.currentTime = 0; renderTL(); updateTC();
+    renderParts();
     toast("Video aa gayi ✅");
   };
   v.onerror = ()=>{ S.url=null; toast("Ye video nahi khul rahi. MP4 video try karo."); };
@@ -283,12 +314,14 @@ function setPlayIcon(playing){
 }
 $("play").onclick = ()=>{
   if(!need() || S.busy) return;
+  S.pe = null;
   if(v.paused){ if(v.currentTime<S.start || v.currentTime>=S.end-0.05) v.currentTime=S.start; v.play(); } else v.pause();
 };
 v.addEventListener("play",()=>setPlayIcon(true));
 v.addEventListener("pause",()=>setPlayIcon(false));
 v.addEventListener("timeupdate",()=>{
-  if(!S.busy && !v.paused && v.currentTime>=S.end){ v.pause(); v.currentTime=S.start; }
+  if(S.pe!==null){ if(!v.paused && v.currentTime>=S.pe){ v.pause(); S.pe=null; } }
+  else if(!S.busy && !v.paused && v.currentTime>=S.end){ v.pause(); v.currentTime=S.start; }
   updateTC();
 });
 function updateTC(){
@@ -523,14 +556,19 @@ function setBusy(on, pct){
   document.querySelectorAll("#txtBox button, #txtBox input, #txtBox textarea").forEach(el=>{ el.disabled = on; });
   $("bar").style.width = on ? (pct||0)+"%" : "0";
   $("dlText").textContent = on ? "Export ho raha hai "+Math.round(pct||0)+"%" : "Download";
+  lockParts(on);
+  if(on) $("pStat").textContent = "Export ho raha hai "+Math.round(pct||0)+"%  (screen on rakho)";
+  else updJoin();
 }
 
-$("dl").onclick = async ()=>{
+async function runExport(segs, tag){
   if(!need() || S.busy) return;
+  if(!segs.length){ toast("Koi part nahi chuna"); return; }
   if(!window.MediaRecorder || !cv.captureStream){ toast("Is browser me export nahi chalega. Chrome use karo."); return; }
   let wake=null;
   try{
     setBusy(true,0);
+    S.pe = null;
     v.pause();
     try{ wake = await navigator.wakeLock.request("screen"); }catch(e){}
     setupAudio();
@@ -554,33 +592,40 @@ $("dl").onclick = async ()=>{
     rec.ondataavailable = e=>{ if(e.data && e.data.size) chunks.push(e.data); };
     const stopped = new Promise(r=>rec.onstop=r);
 
-    await seek(S.start);
-    v.playbackRate = S.speed;
-    rec.start(500);
-    await v.play();
+    const total = segs.reduce((a,g)=>a+(g.e-g.s),0);
+    let done = 0;
+    for(let i=0;i<segs.length;i++){
+      const g = segs[i];
+      if(i===0){ await seek(g.s); v.playbackRate = S.speed; rec.start(500); }
+      else {
+        if(rec.state==="recording") rec.pause();
+        await seek(g.s); v.playbackRate = S.speed;
+        if(rec.state==="paused") rec.resume();
+      }
+      await v.play();
+      await new Promise(resolve=>{
+        const draw = ()=>{
+          if(canFilter){
+            ctx.filter = filterFull();
+            if(ctx.filter==="none") ctx.filter = filterBasic();
+          }
+          ctx.save();
+          ctx.translate(W/2, H/2);
+          ctx.rotate(S.rot*Math.PI/180);
+          ctx.drawImage(v, -(swap?H:W)/2, -(swap?W:H)/2, swap?H:W, swap?W:H);
+          ctx.restore();
+          drawText(ctx, W, H);
+          const pct = clamp((done + (v.currentTime-g.s))/total*100,0,100);
+          setBusy(true,pct);
+          if(v.currentTime>=g.e-0.03 || v.ended || v.paused){ resolve(); return; }
+          requestAnimationFrame(draw);
+        };
+        draw();
+      });
+      v.pause();
+      done += g.e-g.s;
+    }
 
-    await new Promise(resolve=>{
-      const total = S.end - S.start;
-      const draw = ()=>{
-        if(canFilter){
-          ctx.filter = filterFull();
-          if(ctx.filter==="none") ctx.filter = filterBasic();
-        }
-        ctx.save();
-        ctx.translate(W/2, H/2);
-        ctx.rotate(S.rot*Math.PI/180);
-        ctx.drawImage(v, -(swap?H:W)/2, -(swap?W:H)/2, swap?H:W, swap?W:H);
-        ctx.restore();
-        drawText(ctx, W, H);
-        const pct = clamp((v.currentTime-S.start)/total*100,0,100);
-        setBusy(true,pct);
-        if(v.currentTime>=S.end-0.03 || v.ended || v.paused){ resolve(); return; }
-        requestAnimationFrame(draw);
-      };
-      draw();
-    });
-
-    v.pause();
     rec.stop();
     await stopped;
 
@@ -589,19 +634,187 @@ $("dl").onclick = async ()=>{
     const ext = type.indexOf("mp4")>-1 ? "mp4" : "webm";
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "MeraEditor_"+S.res+"p."+ext;
+    a.download = "MeraEditor_"+(tag?tag+"_":"")+S.res+"p."+ext;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(a.href), 30000);
     toast(canFilter ? "Video save ho gayi ✅" : "Video save ho gayi. Is browser me Brightness, Contrast, Sharpness export me nahi lagte.");
   }catch(err){
-    toast("Export nahi ho paya. Chhoti video ya Chrome try karo.");
+    toast("Export nahi ho paya. Chhota hissa ya Chrome try karo.");
   }finally{
     if(outGain) outGain.gain.value = 1;
     try{ if(wake) wake.release(); }catch(e){}
     v.currentTime = S.start;
     setBusy(false);
   }
+}
+$("dl").onclick = ()=>runExport([{s:S.start, e:S.end}], "");
+
+/* ---------- Parts (cut a long video, keep parts, join later) ---------- */
+let persistTimer;
+function persist(){
+  if(!S.pid) return;
+  clearTimeout(persistTimer);
+  persistTimer = setTimeout(()=>{
+    dbPut("projects", {id:S.pid, name:S.name, size:S.file?S.file.size:0, dur:S.dur, parts:S.parts, created:Date.now()}).catch(()=>{});
+  }, 400);
+}
+function lockParts(on){
+  document.querySelectorAll("#partsBox button, #partsBox input").forEach(el=>{ el.disabled = on; });
+  if(!on) $("pJoin").disabled = selParts().length===0;
+}
+function selParts(){ const r=[]; S.parts.forEach((p,i)=>{ if(p.on) r.push(i); }); return r; }
+function updJoin(){
+  const sel = selParts();
+  const tot = sel.reduce((a,i)=>a+(S.parts[i].e-S.parts[i].s),0)/S.speed;
+  $("pJoinT").textContent = sel.length ? "Chune hue "+sel.length+" parts jodo + Download ("+fmt(tot)+")" : "Parts jodo + Download";
+  $("pJoin").disabled = S.busy || !sel.length;
+  $("pStat").innerHTML = "";
+  if(tot > 1200){
+    const w = document.createElement("div"); w.className = "warn";
+    w.textContent = "Dhyan: final video lambi hai. Export me poora utna hi time lagta hai aur phone atak sakta hai. 20 minute tak best chalta hai.";
+    $("pStat").appendChild(w);
+  }
+}
+function renderParts(){
+  const L = $("pList"); L.textContent = "";
+  S.parts.forEach((p,i)=>{
+    const row = document.createElement("div"); row.className = "prow";
+    const top = document.createElement("label"); top.className = "ptop";
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = p.on;
+    cb.onchange = ()=>{ p.on = cb.checked; persist(); updJoin(); };
+    const t = document.createElement("span");
+    t.textContent = "Part "+(i+1)+"   "+fmt(p.s)+" – "+fmt(p.e)+"  ("+fmt(p.e-p.s)+")";
+    top.append(cb, t);
+    const bt = document.createElement("div"); bt.className = "pbtn";
+    [["Play",()=>playPart(i)],["Download",()=>runExport([{s:p.s,e:p.e}],"part"+(i+1))],["↑",()=>movePart(i,-1)],["↓",()=>movePart(i,1)],["Hatao",()=>delPart(i)]].forEach(([n,f])=>{
+      const b = document.createElement("button"); b.textContent = n; b.onclick = f; bt.append(b);
+    });
+    row.append(top, bt); L.append(row);
+  });
+  lockParts(S.busy);
+  if(!S.busy) updJoin();
+}
+function playPart(i){
+  if(!need() || S.busy) return;
+  const p = S.parts[i];
+  S.pe = p.e; v.currentTime = p.s; v.play();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function movePart(i,d){
+  const j = i+d; if(j<0 || j>=S.parts.length) return;
+  const x = S.parts[i]; S.parts[i] = S.parts[j]; S.parts[j] = x;
+  renderParts(); persist();
+}
+function delPart(i){ S.parts.splice(i,1); renderParts(); persist(); }
+document.querySelectorAll("#pN button").forEach(b=>{
+  b.onclick = ()=>{ S.pn = +b.dataset.n; document.querySelectorAll("#pN button").forEach(x=>x.setAttribute("aria-pressed", x===b)); };
+});
+$("pSplit").onclick = ()=>{
+  if(!need()) return;
+  const n = S.pn, a = S.start, len = S.end - S.start;
+  if(len/n < 1){ toast("Itne chhote parts nahi ban sakte. Kam parts chuno."); return; }
+  S.parts = [];
+  for(let i=0;i<n;i++) S.parts.push({s:a+len*i/n, e:a+len*(i+1)/n, on:true});
+  renderParts(); persist();
+  toast(n+" parts ban gaye ✅");
 };
+$("pCut").onclick = ()=>{
+  if(!need()) return;
+  const t = v.currentTime;
+  if(!S.parts.length){
+    if(t<=S.start+MIN || t>=S.end-MIN){ toast("Video ko beech me rok kar dabao"); return; }
+    S.parts = [{s:S.start,e:t,on:true},{s:t,e:S.end,on:true}];
+  } else {
+    const j = S.parts.findIndex(p=>t>p.s+MIN && t<p.e-MIN);
+    if(j<0){ toast("Yahan kisi part ke andar nahi ho. Video ko kisi part ke beech me rokho."); return; }
+    const p = S.parts[j];
+    S.parts.splice(j,1,{s:p.s,e:t,on:true},{s:t,e:p.e,on:true});
+  }
+  renderParts(); persist();
+  toast("Kat gaya ✂️");
+};
+$("pClear").onclick = ()=>{ S.parts = []; renderParts(); persist(); };
+$("pAll").onclick = ()=>{ S.parts.forEach(p=>p.on=true); renderParts(); persist(); };
+$("pNone").onclick = ()=>{ S.parts.forEach(p=>p.on=false); renderParts(); persist(); };
+$("pJoin").onclick = ()=>{ const sel = selParts(); runExport(sel.map(i=>({s:S.parts[i].s,e:S.parts[i].e})), "joined"); };
+
+/* ---------- Saved projects (stored inside this browser) ---------- */
+let dbp = null;
+function db(){
+  if(dbp) return dbp;
+  dbp = new Promise((res,rej)=>{
+    if(!window.indexedDB){ rej(new Error("no idb")); return; }
+    const r = indexedDB.open("mera-editor",1);
+    r.onupgradeneeded = ()=>{ const d=r.result; d.createObjectStore("files",{keyPath:"id"}); d.createObjectStore("projects",{keyPath:"id"}); };
+    r.onsuccess = ()=>res(r.result);
+    r.onerror = ()=>rej(r.error);
+  });
+  return dbp;
+}
+function dbTx(store, mode, fn){
+  return db().then(d=>new Promise((res,rej)=>{
+    const t = d.transaction(store, mode);
+    const rq = fn(t.objectStore(store));
+    t.oncomplete = ()=>res(rq && rq.result);
+    t.onerror = ()=>rej(t.error);
+    t.onabort = ()=>rej(t.error || new Error("abort"));
+  }));
+}
+const dbPut = (s,o)=>dbTx(s,"readwrite",st=>st.put(o));
+const dbGet = (s,id)=>dbTx(s,"readonly",st=>st.get(id));
+const dbDel = (s,id)=>dbTx(s,"readwrite",st=>st.delete(id));
+const dbAll = s=>dbTx(s,"readonly",st=>st.getAll());
+
+$("pSave").onclick = async ()=>{
+  if(!need()) return;
+  if(!S.file){ toast("Is video ko save nahi kar sakte"); return; }
+  try{
+    toast("Save ho raha hai, thoda ruko...");
+    try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+    const id = S.pid || ("p"+Date.now());
+    if(!S.pid) await dbPut("files", {id:id, blob:S.file});
+    await dbPut("projects", {id:id, name:S.name, size:S.file.size, dur:S.dur, parts:S.parts, created:Date.now()});
+    S.pid = id;
+    toast("Project save ho gaya ✅");
+    renderSaved();
+  }catch(e){
+    toast("Save nahi ho paya. Phone me jagah kam ho sakti hai.");
+  }
+};
+async function openProject(id){
+  try{
+    const pr = await dbGet("projects", id), f = await dbGet("files", id);
+    if(!pr || !f){ toast("Ye project nahi mila"); return; }
+    loadBlob(f.blob, pr.name, id, pr.parts || []);
+  }catch(e){ toast("Project nahi khul paya."); }
+}
+async function renderSaved(){
+  const box = $("sList");
+  try{
+    const list = await dbAll("projects");
+    box.textContent = "";
+    if(!list.length){ const d=document.createElement("div"); d.className="sub"; d.textContent="Abhi koi saved project nahi."; box.append(d); return; }
+    list.sort((a,b)=>b.created-a.created).forEach(pr=>{
+      const row = document.createElement("div"); row.className = "prow";
+      const t = document.createElement("div"); t.className = "ptop";
+      t.textContent = pr.name+"  •  "+(pr.parts?pr.parts.length:0)+" parts  •  "+Math.round((pr.size||0)/1048576)+" MB";
+      const bt = document.createElement("div"); bt.className = "pbtn";
+      const o = document.createElement("button"); o.textContent = "Kholo"; o.onclick = ()=>openProject(pr.id);
+      const d = document.createElement("button"); d.textContent = "Hatao";
+      d.onclick = async ()=>{
+        if(!confirm("Ye saved project hata du?")) return;
+        try{ await dbDel("projects", pr.id); await dbDel("files", pr.id); if(S.pid===pr.id) S.pid=null; }catch(e){}
+        renderSaved();
+      };
+      bt.append(o, d); row.append(t, bt); box.append(row);
+    });
+  }catch(e){
+    box.textContent = "";
+    const d = document.createElement("div"); d.className = "sub"; d.textContent = "Is browser me save nahi ho sakta (private mode me ho sakta hai).";
+    box.append(d);
+  }
+}
+renderSaved();
 
 applyFilters();
 })();
