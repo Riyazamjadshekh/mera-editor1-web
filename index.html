@@ -359,14 +359,30 @@ function visRect(){
 function drawText(ctx, W, H){
   const t = S.text.trim();
   if(!t) return null;
-  const px = Math.max(8, Math.round(S.tsize/100*H));
-  const lines = t.split("\n");
+  let px = Math.max(8, Math.round(S.tsize/100*H));
   ctx.save();
   ctx.filter = "none";
-  ctx.font = (S.tbold ? "700 " : "500 ") + px + "px " + FONT;
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  const maxW = W*0.9;
+  let lines = [], bw = 0;
+  for(let pass=0; pass<3; pass++){
+    ctx.font = (S.tbold ? "700 " : "500 ") + px + "px " + FONT;
+    lines = [];
+    t.split("\n").forEach(par=>{
+      const words = par.split(/\s+/).filter(Boolean);
+      if(!words.length){ lines.push(""); return; }
+      let line = "";
+      words.forEach(w=>{
+        const test = line ? line+" "+w : w;
+        if(!line || ctx.measureText(test).width <= maxW) line = test; else { lines.push(line); line = w; }
+      });
+      lines.push(line);
+    });
+    bw = Math.max.apply(null, lines.map(l=>ctx.measureText(l).width));
+    if(bw <= maxW) break;
+    px = Math.max(8, Math.floor(px*maxW/bw));
+  }
   const lh = px*1.25;
-  const bw = Math.max.apply(null, lines.map(l=>ctx.measureText(l).width));
   const bh = lh*lines.length;
   const cx = bw < W ? clamp(S.tx*W, bw/2, W-bw/2) : W/2;
   const cy = bh < H ? clamp(S.ty*H, bh/2, H-bh/2) : H/2;
