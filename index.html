@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
 <title>MeraEditor – Free Video Editor</title>
 <meta name="description" content="Free video editor. Trim, Enhance, Compress aur Export, bina watermark ke.">
 <meta name="theme-color" content="#0c0b0b">
@@ -17,22 +17,31 @@ html,body{margin:0}
 body{
   background:radial-gradient(120% 50% at 15% 0%,#2b1a10 0%,var(--bg) 55%) fixed,var(--bg);
   color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  font-size:15px;line-height:1.4;min-height:100vh;padding-bottom:76px;
+  font-size:15px;line-height:1.4;height:100dvh;overflow:hidden;
 }
 button{font:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:2px solid var(--org1);outline-offset:2px}
 svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.wrap{max-width:460px;margin:0 auto;padding:14px}
-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #2a2320}
+.app{max-width:460px;margin:0 auto;height:100dvh;display:flex;flex-direction:column}
+.panels{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 14px;-webkit-overflow-scrolling:touch}
+.panel{display:none}
+.panel.on{display:block}
+.hint{font-size:12px;color:var(--mut);margin:2px 2px 10px}
+.gprog{display:none;margin-top:8px}
+.gprog.on{display:block}
+.gprog .t{font-size:12px;color:var(--org)}
+.gprog .b{height:4px;background:#3a3430;border-radius:2px;overflow:hidden;margin-top:4px}
+.gprog .b i{display:block;height:100%;width:0;background:var(--org)}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #2a2320;flex:none}
 .logo{font-size:20px;font-weight:600;letter-spacing:-.3px}
 .logo b{color:var(--org);font-weight:600}
 .ver{display:block;font-size:11px;color:var(--org);letter-spacing:2px}
 .badge{font-size:12px;color:var(--grn);background:rgba(34,211,166,.12);border:1px solid rgba(34,211,166,.5);border-radius:12px;padding:3px 10px}
 
 .card{background:linear-gradient(180deg,var(--card1),var(--card2));border:1px solid var(--line);border-radius:14px;padding:10px}
-.preview{box-shadow:0 0 18px rgba(249,115,22,.18);margin-bottom:14px}
+.preview{box-shadow:0 0 18px rgba(249,115,22,.18);margin:10px 14px 0;flex:none}
 .pname{font-size:12px;color:#c9c0b8;margin:0 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stage{position:relative;background:#050404;border-radius:10px;overflow:hidden;aspect-ratio:16/10;display:flex;align-items:center;justify-content:center}
+.stage{position:relative;background:#050404;border-radius:10px;overflow:hidden;height:28vh;min-height:150px;max-height:300px;display:flex;align-items:center;justify-content:center}
 video{max-width:100%;max-height:100%;display:block}
 .empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--mut);padding:20px;font-size:14px}
 .playbtn{position:absolute;width:48px;height:48px;border-radius:50%;border:0;background:var(--org);color:#0c0b0b;display:flex;align-items:center;justify-content:center;box-shadow:0 0 18px rgba(249,115,22,.6)}
@@ -82,7 +91,7 @@ textarea::placeholder{color:#6f6760}
 .sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
 .sw[aria-checked=true]{background:var(--org)}
 .sw[aria-checked=true]::after{transform:translateX(16px)}
-.on{font-size:12px;color:var(--org)}
+.cstate{font-size:12px;color:var(--org)}
 .sub{font-size:12px;color:var(--mut)}
 .res{display:flex;gap:6px;margin-top:8px}
 .res button{flex:1;border-radius:8px;padding:8px 2px;font-size:13px;background:#17120f;border:1px solid var(--line)}
@@ -103,22 +112,23 @@ button:disabled,input:disabled,textarea:disabled{opacity:.5;cursor:not-allowed}
 .dl[disabled]{opacity:.9;cursor:progress}
 .note{font-size:12px;color:var(--mut);margin:8px 2px 0;text-align:center}
 
-nav{position:fixed;left:0;right:0;bottom:0;background:#0c0b0b;border-top:1px solid #2a2320;padding:6px 14px calc(6px + env(safe-area-inset-bottom));z-index:5}
-nav .in{max-width:460px;margin:0 auto;display:flex;border:1px solid #2a2320;border-radius:12px;overflow:hidden}
-nav button{flex:1;background:none;border:0;padding:9px 0;display:flex;align-items:center;justify-content:center;gap:6px;color:#8a817a;font-size:14px}
-nav button svg{width:18px;height:18px}
-nav button[aria-current=page]{color:var(--org);background:linear-gradient(180deg,#2a1a10,#15100d);box-shadow:inset 0 -2px 0 var(--org)}
+.tabs{flex:none;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;background:#0c0b0b;border-top:1px solid #2a2320;padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:0 0 auto;min-width:66px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 8px;border:0;background:none;color:#8a817a;font-size:12px;border-radius:10px}
+.tabs button svg{width:20px;height:20px}
+.tabs button.on{color:var(--org);background:linear-gradient(180deg,#2a1a10,#15100d);box-shadow:inset 0 -2px 0 var(--org)}
 .toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:#241c18;border:1px solid var(--line);color:var(--txt);padding:10px 16px;border-radius:12px;font-size:14px;max-width:90%;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9;text-align:center}
 .toast.show{opacity:1}
 input[type=file]{display:none}
 canvas{display:none}
 
 @media(min-width:900px){
-  .wrap{max-width:1000px;padding:22px}
-  main{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:start}
-  .preview{position:sticky;top:16px;margin-bottom:0}
-  .stage{aspect-ratio:16/10}
-  body{padding-bottom:84px}
+  .app{max-width:1000px;display:grid;grid-template-columns:1.15fr 1fr;grid-template-rows:auto auto 1fr;grid-template-areas:"hdr hdr" "prev tabs" "prev panels";column-gap:20px;padding:0 22px}
+  header{grid-area:hdr;padding:14px 0}
+  .preview{grid-area:prev;margin:10px 0 0;align-self:start}
+  .stage{height:auto;min-height:0;max-height:none;aspect-ratio:16/10}
+  .tabs{grid-area:tabs;border-top:0;border-bottom:1px solid #2a2320;margin-top:10px;padding:6px 0}
+  .panels{grid-area:panels;padding:12px 0}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -129,54 +139,67 @@ canvas{display:none}
   <filter id="sharp" color-interpolation-filters="sRGB"><feConvolveMatrix id="kern" order="3" preserveAlpha="true" kernelMatrix="0 0 0 0 1 0 0 0 0"/></filter>
 </svg>
 
-<div class="wrap">
+<div class="app">
   <header>
-    <div class="logo">Mera<b>Editor</b><span class="ver">PRO • v1.4</span></div>
+    <div class="logo">Mera<b>Editor</b><span class="ver">PRO • v1.5</span></div>
     <span class="badge">No watermark</span>
   </header>
 
-  <main>
-    <section class="card preview" aria-label="Video preview">
-      <p class="pname" id="pname">Abhi koi video nahi chuni</p>
-      <div class="stage">
-        <video id="vid" playsinline preload="metadata"></video>
-        <div class="empty" id="empty">Neeche Upload, Gallery ya Camera dabao</div>
-        <canvas id="tcv"></canvas>
-        <button class="playbtn" id="play" aria-label="Play" hidden><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4l13 8-13 8z"/></svg></button>
-        <span class="tc" id="tc" hidden>00:00 / 00:00</span>
-      </div>
-      <div class="tl" id="tl">
-        <div class="track" id="track"></div>
-        <div class="sel" id="sel"></div>
-        <div class="ph" id="ph"></div>
-        <div class="h" id="hs" role="slider" aria-label="Trim start"></div>
-        <div class="h" id="he" role="slider" aria-label="Trim end"></div>
-      </div>
-      <div class="tt"><span id="ts">00:00</span><span id="te">00:00</span></div>
-    </section>
+  <section class="card preview" aria-label="Video preview">
+    <p class="pname" id="pname">Abhi koi video nahi chuni</p>
+    <div class="stage">
+      <video id="vid" playsinline preload="metadata"></video>
+      <div class="empty" id="empty">Neeche Video tab se Upload, Gallery ya Camera chuno</div>
+      <canvas id="tcv"></canvas>
+      <button class="playbtn" id="play" aria-label="Play" hidden><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4l13 8-13 8z"/></svg></button>
+      <span class="tc" id="tc" hidden>00:00 / 00:00</span>
+    </div>
+    <div class="tl" id="tl">
+      <div class="track" id="track"></div>
+      <div class="sel" id="sel"></div>
+      <div class="ph" id="ph"></div>
+      <div class="h" id="hs" role="slider" aria-label="Trim start"></div>
+      <div class="h" id="he" role="slider" aria-label="Trim end"></div>
+    </div>
+    <div class="tt"><span id="ts">00:00</span><span id="te">00:00</span></div>
+    <div class="gprog" id="gProg"><div class="t" id="gT"></div><div class="b"><i id="gB"></i></div></div>
+  </section>
 
-    <section id="tools" aria-label="Tools">
-      <div class="sec"><h2>Tools</h2><span>PRO TOOLS • V1.4</span></div>
+  <div class="panels" id="panels">
 
+    <section class="panel on" data-tab="video" role="tabpanel" aria-label="Video">
+      <div class="hint">Video chuno ya camera se banao. Phir neeche ke tabs se edit karo.</div>
       <div class="row r3">
         <button class="tile" id="bUpload"><svg class="i" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload</button>
         <button class="tile" id="bGallery"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Gallery</button>
         <button class="tile" id="bCamera"><svg class="i" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Camera</button>
       </div>
+    </section>
 
+    <section class="panel" data-tab="cut" role="tabpanel" aria-label="Cut">
+      <div class="hint">Video rok kar Trim Start / End dabao, ya timeline ke orange handle kheencho.</div>
       <div class="row r3">
         <button class="tile" id="bTs"><svg class="i" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></svg>Trim Start</button>
         <button class="tile" id="bTe"><svg class="i" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></svg>Trim End</button>
         <button class="tile" id="bRot"><svg class="i" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>Rotate</button>
       </div>
+      <div class="box">
+        <h3>Speed</h3>
+        <div class="res" id="spd"><button data-s="0.5" aria-pressed="false">0.5x Slow</button><button data-s="1" aria-pressed="true">1x</button><button data-s="2" aria-pressed="false">2x Fast</button></div>
+      </div>
+    </section>
 
+    <section class="panel" data-tab="enh" role="tabpanel" aria-label="Enhance">
+      <div class="hint">Slider hilao, upar video me turant dikhega.</div>
       <div class="row r3">
         <div class="sl"><div class="v" id="vb">50%</div><input type="range" id="rb" min="0" max="100" value="50" aria-labelledby="lb"><label id="lb" for="rb">Brightness</label></div>
         <div class="sl"><div class="v" id="vc">50%</div><input type="range" id="rc" min="0" max="100" value="50" aria-labelledby="lc"><label id="lc" for="rc">Contrast</label></div>
         <div class="sl"><div class="v" id="vs">50%</div><input type="range" id="rs" min="0" max="100" value="50" aria-labelledby="ls"><label id="ls" for="rs">Sharpness</label></div>
       </div>
+    </section>
 
-      <div class="box" id="txtBox" style="margin-bottom:8px">
+    <section class="panel" data-tab="text" role="tabpanel" aria-label="Text">
+      <div class="box" id="txtBox">
         <h3>Text</h3>
         <textarea id="tIn" rows="2" maxlength="120" placeholder="Yahan text likho (Hindi bhi chalega)"></textarea>
         <div class="lbl">Size</div>
@@ -194,32 +217,14 @@ canvas{display:none}
         <div class="res" style="margin-top:6px" id="tSty"><button data-k="tbold" aria-pressed="true">Bold</button><button data-k="tout" aria-pressed="true">Outline</button><button data-k="tbox" aria-pressed="false">Box</button></div>
         <div class="lbl">Jagah</div>
         <div class="res" style="margin-top:6px" id="tPos"><button data-y="0.15">Upar</button><button data-y="0.5">Beech</button><button data-y="0.85">Neeche</button></div>
-        <div class="sub" style="margin-top:8px">Text ko preview me ungli se kheench ke bhi hila sakte ho.</div>
+        <div class="sub" style="margin-top:8px">Text ko upar preview me ungli se kheench ke bhi hila sakte ho.</div>
       </div>
+    </section>
 
-      <div class="box" style="margin-bottom:8px">
-        <h3>Speed</h3>
-        <div class="res" id="spd"><button data-s="0.5" aria-pressed="false">0.5x Slow</button><button data-s="1" aria-pressed="true">1x</button><button data-s="2" aria-pressed="false">2x Fast</button></div>
-      </div>
-
-      <div class="two">
-        <div class="box">
-          <div class="cmp"><h3>Compress</h3><button class="sw" id="sw" role="switch" aria-checked="true" aria-label="Compress"></button></div>
-          <div class="on" id="cmpState">Compress ON</div>
-          <div class="sub">Size kam, quality almost same</div>
-        </div>
-        <div class="box">
-          <h3 style="text-align:center">Export</h3>
-          <div class="res"><button id="r720" aria-pressed="true">720p</button><button id="r1080" aria-pressed="false">1080p</button></div>
-        </div>
-      </div>
-
-      <button class="dl" id="dl"><i class="bar" id="bar"></i><svg class="i" viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg><span id="dlText">Download</span></button>
-      <p class="note" id="note">Export ke time screen on rakho aur ye tab khula rakho. Export me utna hi time lagta hai jitni output video ki length hai.</p>
-
-      <div class="box" id="partsBox" style="margin-top:14px">
+    <section class="panel" data-tab="parts" role="tabpanel" aria-label="Parts">
+      <div class="box" id="partsBox">
         <h3>Parts (lambi video ko kaato)</h3>
-        <div class="sub">Upar ki Trim range ko barabar parts me baanto, ya video rok kar "Yahan se kaato" dabao.</div>
+        <div class="sub">Trim range ko barabar parts me baanto, ya video rok kar "Yahan se kaato" dabao.</div>
         <div class="lbl">Kitne parts?</div>
         <div class="res" id="pN" style="margin-top:6px"><button data-n="5" aria-pressed="false">5</button><button data-n="10" aria-pressed="true">10</button><button data-n="20" aria-pressed="false">20</button></div>
         <div class="res"><button id="pSplit">Barabar parts me kaato</button></div>
@@ -231,21 +236,43 @@ canvas{display:none}
         <div class="res"><button id="pSave">Project save karo</button></div>
         <div class="sub" style="margin-top:6px">Parts aur video isi browser ke andar save hote hain, baad me wapas khol ke jod sakte ho. Edit settings (Text, Speed, Rotate...) sab parts pe lagti hain.</div>
       </div>
+    </section>
 
-      <div class="box" id="savedBox" style="margin-top:8px">
+    <section class="panel" data-tab="exp" role="tabpanel" aria-label="Export">
+      <div class="two">
+        <div class="box">
+          <div class="cmp"><h3>Compress</h3><button class="sw" id="sw" role="switch" aria-checked="true" aria-label="Compress"></button></div>
+          <div class="cstate" id="cmpState">Compress ON</div>
+          <div class="sub">Size kam, quality almost same</div>
+        </div>
+        <div class="box">
+          <h3 style="text-align:center">Export</h3>
+          <div class="res"><button id="r720" aria-pressed="true">720p</button><button id="r1080" aria-pressed="false">1080p</button></div>
+        </div>
+      </div>
+      <button class="dl" id="dl"><i class="bar" id="bar"></i><svg class="i" viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg><span id="dlText">Download</span></button>
+      <p class="note" id="note">Export ke time screen on rakho aur ye tab khula rakho. Export me utna hi time lagta hai jitni output video ki length hai.</p>
+    </section>
+
+    <section class="panel" data-tab="saved" role="tabpanel" aria-label="Saved">
+      <div class="box" id="savedBox">
         <h3>Saved projects</h3>
         <div id="sList"><div class="sub">Abhi koi saved project nahi.</div></div>
       </div>
     </section>
-  </main>
-</div>
 
-<nav aria-label="Main">
-  <div class="in">
-    <button id="nHome" aria-current="page"><svg class="i" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>Home</button>
-    <button id="nEdit"><svg class="i" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>Edit</button>
   </div>
-</nav>
+
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Tools">
+    <button data-tab="video" role="tab" aria-selected="true" class="on"><svg class="i" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Video</button>
+    <button data-tab="cut" role="tab" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></svg>Cut</button>
+    <button data-tab="enh" role="tab" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Enhance</button>
+    <button data-tab="text" role="tab" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>Text</button>
+    <button data-tab="parts" role="tab" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/></svg>Parts</button>
+    <button data-tab="exp" role="tab" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg>Export</button>
+    <button data-tab="saved" role="tab" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Saved</button>
+  </nav>
+</div>
 
 <input type="file" id="fUpload" accept="video/*">
 <input type="file" id="fGallery" accept="video/mp4,video/quicktime,video/webm,video/*">
@@ -265,7 +292,7 @@ const fmt = t => { t = Math.max(0, t||0); const h = Math.floor(t/3600), m = Math
 
 let toastTimer;
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2600); }
-function need(){ if(!S.url){ toast("Pehle video chuno (Upload, Gallery ya Camera)"); return false; } return true; }
+function need(){ if(!S.url){ showTab("video"); toast("Pehle video chuno (Upload, Gallery ya Camera)"); return false; } return true; }
 
 /* ---------- Filters ---------- */
 function bcValue(p){ return (0.5 + p/100).toFixed(2); }
@@ -297,6 +324,7 @@ function loadBlob(blob, name, pid, parts){
     $("empty").hidden = true; $("play").hidden = false; $("tc").hidden = false;
     S.rot = 0; fitRotate(); v.playbackRate = S.speed; v.currentTime = 0; renderTL(); updateTC();
     renderParts();
+    showTab(S.parts.length ? "parts" : "cut");
     toast("Video aa gayi ✅");
   };
   v.onerror = ()=>{ S.url=null; toast("Ye video nahi khul rahi. MP4 video try karo."); };
@@ -517,13 +545,18 @@ function setRes(r){
 $("r720").onclick = ()=>setRes(720);
 $("r1080").onclick = ()=>setRes(1080);
 
-/* ---------- Bottom nav ---------- */
-function nav(which){
-  $("nHome").setAttribute("aria-current", which==="home" ? "page" : "false");
-  $("nEdit").setAttribute("aria-current", which==="edit" ? "page" : "false");
+/* ---------- Tabs (only the tool you need is shown) ---------- */
+function showTab(name){
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on", p.dataset.tab===name));
+  document.querySelectorAll("#tabs button").forEach(b=>{
+    const on = b.dataset.tab===name;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-selected", String(on));
+    if(on){ try{ b.scrollIntoView({inline:"center", block:"nearest"}); }catch(e){} }
+  });
+  $("panels").scrollTop = 0;
 }
-$("nHome").onclick = ()=>{ nav("home"); window.scrollTo({top:0,behavior:"smooth"}); };
-$("nEdit").onclick = ()=>{ nav("edit"); if(!S.url) toast("Edit karne ke liye pehle video chuno"); $("tools").scrollIntoView({behavior:"smooth",block:"start"}); };
+document.querySelectorAll("#tabs button").forEach(b=>{ b.onclick = ()=>showTab(b.dataset.tab); });
 
 /* ---------- Export ---------- */
 let actx=null, outGain=null, adest=null;
@@ -556,6 +589,9 @@ function setBusy(on, pct){
   document.querySelectorAll("#txtBox button, #txtBox input, #txtBox textarea").forEach(el=>{ el.disabled = on; });
   $("bar").style.width = on ? (pct||0)+"%" : "0";
   $("dlText").textContent = on ? "Export ho raha hai "+Math.round(pct||0)+"%" : "Download";
+  $("gProg").classList.toggle("on", on);
+  $("gT").textContent = "Export ho raha hai "+Math.round(pct||0)+"%  (screen on rakho)";
+  $("gB").style.width = on ? (pct||0)+"%" : "0";
   lockParts(on);
   if(on) $("pStat").textContent = "Export ho raha hai "+Math.round(pct||0)+"%  (screen on rakho)";
   else updJoin();
@@ -698,7 +734,6 @@ function playPart(i){
   if(!need() || S.busy) return;
   const p = S.parts[i];
   S.pe = p.e; v.currentTime = p.s; v.play();
-  window.scrollTo({top:0,behavior:"smooth"});
 }
 function movePart(i,d){
   const j = i+d; if(j<0 || j>=S.parts.length) return;
